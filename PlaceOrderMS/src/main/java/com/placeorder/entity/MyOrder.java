@@ -14,7 +14,7 @@ import io.swagger.annotations.ApiModelProperty;
 @Entity
 @Table(name = "myorders",schema = "jlcordersdb")
 @ApiModel(value="Order contains orderId,orderDate,userId,totalQty,totalCost,status") 
-public class Order {
+public class MyOrder {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "orderId_generator")
 	@SequenceGenerator(name = "orderId_generator",sequenceName = "myorderId_gen",initialValue = 1002, allocationSize = 1)
@@ -42,15 +42,15 @@ public class Order {
 	@Column(name = "status")
 	private String status;
 
-	public Order() {}
-	public Order(String orderDate, String userId, int totalQty, double totalCost, String status) {
+	public MyOrder() {}
+	public MyOrder(String orderDate, String userId, int totalQty, double totalCost, String status) {
 		this.orderDate = orderDate;
 		this.userId = userId;
 		this.totalQty = totalQty;
 		this.totalCost = totalCost;
 		this.status = status;
 	}
-	public Order(Integer orderId, String orderDate, String userId, int totalQty, double totalCost, String status) {
+	public MyOrder(Integer orderId, String orderDate, String userId, int totalQty, double totalCost, String status) {
 		super();
 		this.orderId = orderId;
 		this.orderDate = orderDate;

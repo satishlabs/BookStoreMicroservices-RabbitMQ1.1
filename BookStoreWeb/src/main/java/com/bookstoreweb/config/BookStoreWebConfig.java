@@ -63,7 +63,7 @@ public class BookStoreWebConfig implements WebMvcConfigurer {
 				.apiInfo(getMyApiInfo() );
 	}
 	
-	// RabbitMQ for Rating
+	// RabbitMQ for Order
 	@Bean(name = "myOrderQueue")
 	Queue createOrderQueue() {
 		return QueueBuilder.durable(ORDER_QUEUE).build();

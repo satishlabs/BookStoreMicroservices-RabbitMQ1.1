@@ -24,6 +24,9 @@ public class PlaceOrderConfig implements WebMvcConfigurer{
 	public static final String INVENTORY_QUEUE = "MyInventory-Queue";
 	public static final String INVENTORY_EXCHANGE = "MyInventory-Exchange";
 	
+	public static final String ORDER_QUEUE= "MyOrder-Queue";
+	public static final String ORDER_EXCHANGE= "MyOrder-Exchange"; 
+	
 	private ApiInfo getMyApiInfo() {
 		return new ApiInfo( "PlaceOrderMS" , "Place Order Microserices",
 				"1.9","Free to use for 10 times",
@@ -41,6 +44,7 @@ public class PlaceOrderConfig implements WebMvcConfigurer{
 				.apiInfo(getMyApiInfo() );
 	}
 	
+	//update Inventory
 	@Bean(name = "myInventoryQueue")
 	Queue createInventoryQueue() {
 		return QueueBuilder.durable(INVENTORY_QUEUE).build();
@@ -54,5 +58,21 @@ public class PlaceOrderConfig implements WebMvcConfigurer{
 	@Bean
 	Binding inventoryBinding(Queue myInventoryQueue, TopicExchange myInventoryExchange) {
 		return BindingBuilder.bind(myInventoryQueue).to(myInventoryExchange).with(INVENTORY_QUEUE);
+	}
+	
+	//Place order
+	@Bean(name = "myOrderQueue")
+	Queue createOrderQueue() {
+		return QueueBuilder.durable(ORDER_QUEUE).build();
+	}
+
+	@Bean(name = "myOrderExchange")
+	Exchange createOrderExchange() {
+		return ExchangeBuilder.topicExchange(ORDER_EXCHANGE).build();
+	}
+
+	@Bean
+	Binding orderBinding(Queue myOrderQueue, TopicExchange myOrderExchange) {
+		return BindingBuilder.bind(myOrderQueue).to(myOrderExchange).with(ORDER_QUEUE);
 	}
 }

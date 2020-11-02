@@ -1,10 +1,7 @@
-package com.placeorder.dto;
+package com.satish.rabbitmq;
 
 import java.io.Serializable;
 import java.util.List;
-
-import com.placeorder.entity.Order;
-import com.placeorder.entity.OrderItem;
 
 public class OrderInfo implements Serializable{
 	private Order order;

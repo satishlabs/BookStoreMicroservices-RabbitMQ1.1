@@ -24,16 +24,16 @@ import com.satish.rabbitmq.BookRatingInfo;
 @Service
 @Transactional
 public class BookServiceImpl implements BookService{
-	
+
 	@Autowired
 	private BookDAO bookDAO;
-	
+
 	@Autowired
 	private BookRatingDAO bookRatingDAO;
 
 	@Autowired
 	private BookInventoryDAO bookInventoryDAO;
-	
+
 	@Override
 	public List<Book> getBooks(String author, String category) {
 		List<Book> mybooks = new ArrayList<Book>();
@@ -52,7 +52,7 @@ public class BookServiceImpl implements BookService{
 	@Override
 	public BookInfo getBookInfo(Integer bookId) {
 		BookInfo bookInfo = new BookInfo();
-		
+
 		//1. Book Details
 		Book book = bookDAO.findById(bookId).get(); 
 		bookInfo.setBookId(book.getBookId());
@@ -60,30 +60,31 @@ public class BookServiceImpl implements BookService{
 		bookInfo.setAuthor(book.getAuthor());
 		bookInfo.setPublications(book.getPublications());
 		bookInfo.setCategory(book.getCategory());
-		
+
 		//2. Book Rating Details
 		BookRating bookRating = bookRatingDAO.findById(bookId).get();
 		bookInfo.setAvgRating(bookRating.getAvgRating());
 		bookInfo.setNumberOfSearches(bookRating.getNumberOfSearches());
-		
+
 		//3.Book Inventory Details
 		BookInventory bookInventory = bookInventoryDAO.findById(bookId).get();
 		bookInfo.setBooksAvailable(bookInventory.getBooksAvailable());
-		
-		
+
+
 		//4. Book Price Details
 		RestTemplate bookPriceRest = new RestTemplate();
 		String endpoints = "http://localhost:9000/bookPrice/"+bookId;
 		BookPriceInfo bpInfo = bookPriceRest.getForObject(endpoints, BookPriceInfo.class);
-		
+
 		bookInfo.setPrice(bpInfo.getPrice());
 		bookInfo.setOffer(bpInfo.getOffer());
-		
+
 		return bookInfo;
 	}
 
-	 @RabbitListener(queues = BookSearchConfig.RATINGS_QUEUE)
+	@RabbitListener(queues = BookSearchConfig.RATINGS_QUEUE)
 	public void updateBookRating(BookRatingInfo bookRatingInfo) {
+		System.out.println("---4.BookServiceImpl --  updateBookRating()---");
 		BookRating bookRating = new BookRating();
 		bookRating.setBookId(bookRatingInfo.getBookId());
 		bookRating.setAvgRating(bookRatingInfo.getAvgRating());
@@ -91,8 +92,9 @@ public class BookServiceImpl implements BookService{
 		bookRatingDAO.save(bookRating);
 	}
 
-	 @RabbitListener(queues = BookSearchConfig.INVENTORY_QUEUE)
+	@RabbitListener(queues = BookSearchConfig.INVENTORY_QUEUE)
 	public void updateBookInventory(BookInventoryInfo bookInventoryInfo) {
+		System.out.println("---4.BookServiceImpl --  updateBookInventory()---");
 		BookInventory bookInventory = new BookInventory();
 		bookInventory.setBookId(bookInventoryInfo.getBookId());
 		bookInventory.setBooksAvailable(bookInventoryInfo.getBooksAvailable());

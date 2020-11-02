@@ -10,9 +10,12 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.bookstoreweb.config.BookStoreWebConfig;
 import com.bookstoreweb.dto.Book;
 import com.bookstoreweb.dto.BookInfo;
 import com.bookstoreweb.dto.UserRating;
@@ -25,6 +28,9 @@ public class BookStoreServiceImpl implements BookStoreService {
 	static Logger log = LoggerFactory.getLogger(BookStoreServiceImpl.class);
 
 	Map<Integer, Book> booksMap = new LinkedHashMap<>();
+
+	@Autowired
+	private RabbitTemplate rabbitTemplate;
 
 	public List<String> getAuthorsList() {
 		List<String> authorsList = new ArrayList<>();
@@ -118,11 +124,9 @@ public class BookStoreServiceImpl implements BookStoreService {
 		orderInfo.setOrder(order);
 		orderInfo.setItemsList(itemList);
 		System.out.println(orderInfo);
-		// Invoke PlaceOrder MS
-		String orderEndpoint = "http://localhost:7000/placeOrder";
-		RestTemplate orderRest = new RestTemplate();
 
-		orderRest.put(orderEndpoint, orderInfo);
+		// Send Order Message to RabbitMQ
+		rabbitTemplate.convertAndSend(BookStoreWebConfig.ORDER_QUEUE, orderInfo);
 		System.out.println("Order Placed...");
 	}
 

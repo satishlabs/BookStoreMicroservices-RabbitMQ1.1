@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,15 +13,17 @@ import com.placeorder.config.PlaceOrderConfig;
 import com.placeorder.dao.BookInventoryDAO;
 import com.placeorder.dao.OrderDAO;
 import com.placeorder.dao.OrderItemDAO;
-import com.placeorder.dto.OrderInfo;
 import com.placeorder.entity.BookInventory;
-import com.placeorder.entity.Order;
-import com.placeorder.entity.OrderItem;
+import com.placeorder.entity.MyOrder;
+import com.placeorder.entity.MyOrderItem;
 import com.satish.rabbitmq.BookInventoryInfo;
+import com.satish.rabbitmq.Order;
+import com.satish.rabbitmq.OrderInfo;
+import com.satish.rabbitmq.OrderItem;
 
 @Service
-public class OrderServiceImpl implements OrderService{
-	static Logger log=LoggerFactory.getLogger(OrderServiceImpl.class); 
+public class OrderServiceImpl implements OrderService {
+	static Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
 
 	@Autowired
 	private OrderDAO orderDAO;
@@ -30,61 +33,61 @@ public class OrderServiceImpl implements OrderService{
 
 	@Autowired
 	private BookInventoryDAO bookInventoryDAO;
-	
+
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
 
-	@Override
+	@RabbitListener(queues = PlaceOrderConfig.ORDER_QUEUE)
 	public void placeOrder(OrderInfo orderInfo) {
-		log.info("---OrderServiceImpl---placeOrder()-----"); 
-		//Place Order
-		// Task1: Insert Order  - 1 
-		Order myorder = orderInfo.getOrder();
+		log.info("---3. OrderServiceImpl---placeOrder()-----");
+		// Place Order
+		// Task1: Insert Order - 1
+		Order order = orderInfo.getOrder();
+		MyOrder myorder = new MyOrder(order.getOrderDate(), order.getUserId(), order.getTotalQty(), order.getTotalCost(), order.getStatus());
 		myorder = orderDAO.save(myorder);
 		int orderId = myorder.getOrderId();
 
-
-		// Task2: Insert OrderItems  - N** need to improve this
+		// Task2: Insert OrderItems - N** need to improve this
 		List<OrderItem> itemList = orderInfo.getItemsList();
-		System.out.println("OrderServiceImpl -- itemList "+itemList);
-		for(OrderItem myOrderItem: itemList) {
-			myOrderItem.setOrderId(orderId);
+		for (OrderItem orderItem : itemList) {
+			orderItem.setOrderId(orderId);
+			MyOrderItem myOrderItem = new MyOrderItem(orderItem.getOrderId(), orderItem.getBookId(), orderItem.getQty(), orderItem.getCost());
 			orderItemDAO.save(myOrderItem);
 		}
-	
+
 		// Task3: Update Local Book Inventory - N
 		// Task4: Update BookSearchMS BookInventory - N
-		for(OrderItem myorderItem: itemList) {
+		for (OrderItem myorderItem : itemList) {
 			Integer bookId = myorderItem.getBookId();
-			BookInventory mybookInventory =  bookInventoryDAO.findById(bookId).get();
+			BookInventory mybookInventory = bookInventoryDAO.findById(bookId).get();
 			Integer currentStock = mybookInventory.getBooksAvailable();
-			currentStock = currentStock-myorderItem.getQty();
+			currentStock = currentStock - myorderItem.getQty();
 			mybookInventory.setBooksAvailable(currentStock);
-			
-			//Local Inventory
+
+			// Local Inventory
 			bookInventoryDAO.save(mybookInventory);
-			
-			//update Inventory of BookSearchMS
-			//By Sending Message to RabbitMQ
+
+			// update Inventory of BookSearchMS
+			// By Sending Message to RabbitMQ
 			BookInventoryInfo bookInventoryInfo = new BookInventoryInfo();
 			bookInventoryInfo.setBookId(mybookInventory.getBookId());
 			bookInventoryInfo.setBooksAvailable(mybookInventory.getBooksAvailable());
-			
+
 			rabbitTemplate.convertAndSend(PlaceOrderConfig.INVENTORY_QUEUE, bookInventoryInfo);
 		}
 	}
 
 	@Override
-	public List<Order> getOrdersByUserId(String userId) {
-		log.info("---OrderServiceImpl---getOrderByUserId()-----"); 
-		List<Order> orderList =  orderDAO.getOrdersByUserId(userId);
+	public List<MyOrder> getOrdersByUserId(String userId) {
+		log.info("---OrderServiceImpl---getOrderByUserId()-----");
+		List<MyOrder> orderList = orderDAO.getOrdersByUserId(userId);
 		return orderList;
 	}
 
 	@Override
-	public Order getOrderByOrderId(Integer orderId) {
-		log.info("---OrderServiceImpl---getOrderByOrderId()-----"); 
-		Order myorder = orderDAO.findById(orderId).get();
+	public MyOrder getOrderByOrderId(Integer orderId) {
+		log.info("---OrderServiceImpl---getOrderByOrderId()-----");
+		MyOrder myorder = orderDAO.findById(orderId).get();
 		return myorder;
 	}
 

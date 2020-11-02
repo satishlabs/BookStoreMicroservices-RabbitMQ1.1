@@ -21,8 +21,13 @@ import springfox.documentation.spring.web.plugins.Docket;
 
 @SpringBootApplication
 public class UserRatingsConfig implements WebMvcConfigurer{
+	//BookRatings
 	public static final String RATINGS_QUEUE= "MyRatings-Queue";
 	public static final String RATINGS_EXCHANGE= "MyRatings-Exchange"; 
+	
+	//UserRatings
+	public static final String USER_RATING_QUEUE = "MyUserRating-Queue";
+	public static final String USER_RATING_EXCHANGE = "MyUserRating-Exchange";
 	
 		private ApiInfo getMyApiInfo() {
 			return new ApiInfo( "UserRatingsMS" , "User Ratings Microservices",
@@ -55,5 +60,21 @@ public class UserRatingsConfig implements WebMvcConfigurer{
 		@Bean
 		Binding ratingBinding(Queue myRatingsQueue, TopicExchange myRatingsExchange) {
 			return BindingBuilder.bind(myRatingsQueue).to(myRatingsExchange).with(RATINGS_QUEUE);
+		}
+		
+		// RabbitMQ for UserRating
+		@Bean(name = "myUserRatingQueue")
+		Queue createUserRatingQueue() {
+			return QueueBuilder.durable(USER_RATING_QUEUE).build();
+		}
+
+		@Bean(name = "myUserRatingExchange")
+		Exchange createUserRatingExchange() {
+			return ExchangeBuilder.topicExchange(USER_RATING_EXCHANGE).build();
+		}
+
+		@Bean
+		Binding userRatingBinding(Queue myUserRatingQueue, TopicExchange myUserRatingExchange) {
+			return BindingBuilder.bind(myUserRatingQueue).to(myUserRatingExchange).with(USER_RATING_QUEUE);
 		}
 }

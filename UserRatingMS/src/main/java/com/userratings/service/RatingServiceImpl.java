@@ -2,12 +2,13 @@ package com.userratings.service;
 
 import java.util.List;
 
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import com.satish.rabbitmq.BookRatingInfo;
+import com.satish.rabbitmq.UserRatingInfo;
 import com.userratings.config.UserRatingsConfig;
 import com.userratings.dao.BookRatingDAO;
 import com.userratings.dao.UserRatingDAO;
@@ -26,9 +27,12 @@ public class RatingServiceImpl implements RatingService{
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
 	
-	@Override
-	public void addUserRating(UserRating userRating) {
+	
+	@RabbitListener(queues = UserRatingsConfig.USER_RATING_QUEUE)
+	public void addUserRating(UserRatingInfo userRatingInfo) {
+		System.out.println("--3.RatingServiceImpl --  addUserRating()");
 		//1. Add the User Rating
+		UserRating userRating = new UserRating(userRatingInfo.getBookId(), userRatingInfo.getUserId(), userRatingInfo.getRating(), userRatingInfo.getReview());
 		userRatingDAO.save(userRating); //BookId
 		
 		//2.Calculate the Avg rating for BookId

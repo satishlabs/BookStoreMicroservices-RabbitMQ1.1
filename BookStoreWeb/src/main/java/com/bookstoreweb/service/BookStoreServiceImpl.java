@@ -22,6 +22,7 @@ import com.bookstoreweb.dto.UserRating;
 import com.satish.rabbitmq.Order;
 import com.satish.rabbitmq.OrderInfo;
 import com.satish.rabbitmq.OrderItem;
+import com.satish.rabbitmq.UserRatingInfo;
 
 @Service
 public class BookStoreServiceImpl implements BookStoreService {
@@ -130,13 +131,11 @@ public class BookStoreServiceImpl implements BookStoreService {
 		System.out.println("Order Placed...");
 	}
 
-	@Override
-	public void addUserRating(UserRating userRating) {
-		// Invoke UserRating MS
-		String ratingEndpoint = "http://localhost:6500/addUserRating";
-		RestTemplate ratingRest = new RestTemplate();
 
-		ratingRest.put(ratingEndpoint, userRating);
+	public void addUserRating(UserRating userRating) {
+		System.out.println("---2. BookStoreServiceImpl -- addUserRating()");
+		UserRatingInfo userRatingInfo = new UserRatingInfo(userRating.getUserId(), userRating.getBookId(), userRating.getRating(),userRating.getReview());
+		rabbitTemplate.convertAndSend(BookStoreWebConfig.USER_RATING_QUEUE, userRatingInfo);
 		System.out.println("Rating Added...");
 
 	}

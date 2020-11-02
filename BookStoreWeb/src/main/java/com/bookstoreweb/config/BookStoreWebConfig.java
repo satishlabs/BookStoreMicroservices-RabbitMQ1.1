@@ -25,9 +25,11 @@ import springfox.documentation.spring.web.plugins.Docket;
 
 @SpringBootApplication
 public class BookStoreWebConfig implements WebMvcConfigurer {
-	public static final String ORDER_QUEUE= "MyOrder-Queue";
-	public static final String ORDER_EXCHANGE= "MyOrder-Exchange"; 
+	public static final String ORDER_QUEUE = "MyOrder-Queue";
+	public static final String ORDER_EXCHANGE = "MyOrder-Exchange";
 
+	public static final String USER_RATING_QUEUE = "MyUserRating-Queue";
+	public static final String USER_RATING_EXCHANGE = "MyUserRating-Exchange";
 
 	@Bean
 	public ViewResolver viewResolver() {
@@ -44,25 +46,22 @@ public class BookStoreWebConfig implements WebMvcConfigurer {
 		// registry.addResourceHandler("/mycss/**")
 		// .addResourceLocations("classpath:/META-INF/resources/mycss/");
 	}
-	
-	//Swagger 
+
+	// Swagger
 	private ApiInfo getMyApiInfo() {
-		return new ApiInfo( "PlaceOrderMS" , "Place Order Microserices",
-				"1.9","Free to use for 10 times",
-				new springfox.documentation.service.Contact("Satish Prasad","https://www.coursecube.com","sd@coursecube.com"),
-				"API Under Free Licence","https://www.coursecube.com" );
+		return new ApiInfo("PlaceOrderMS", "Place Order Microserices", "1.9", "Free to use for 10 times",
+				new springfox.documentation.service.Contact("Satish Prasad", "https://www.coursecube.com",
+						"sd@coursecube.com"),
+				"API Under Free Licence", "https://www.coursecube.com");
 	}
 
 	@Bean
 	public Docket api() {
-		return new Docket(DocumentationType.SWAGGER_2)
-				.select()
-				.paths(PathSelectors.any())
-				.apis(Predicates.not(RequestHandlerSelectors.basePackage("org.springframework.boot")))
-				.build( )
-				.apiInfo(getMyApiInfo() );
+		return new Docket(DocumentationType.SWAGGER_2).select().paths(PathSelectors.any())
+				.apis(Predicates.not(RequestHandlerSelectors.basePackage("org.springframework.boot"))).build()
+				.apiInfo(getMyApiInfo());
 	}
-	
+
 	// RabbitMQ for Order
 	@Bean(name = "myOrderQueue")
 	Queue createOrderQueue() {
@@ -77,5 +76,21 @@ public class BookStoreWebConfig implements WebMvcConfigurer {
 	@Bean
 	Binding orderBinding(Queue myOrderQueue, TopicExchange myOrderExchange) {
 		return BindingBuilder.bind(myOrderQueue).to(myOrderExchange).with(ORDER_QUEUE);
+	}
+
+	// RabbitMQ for UserRating
+	@Bean(name = "myUserRatingQueue")
+	Queue createUserRatingQueue() {
+		return QueueBuilder.durable(USER_RATING_QUEUE).build();
+	}
+
+	@Bean(name = "myUserRatingExchange")
+	Exchange createUserRatingExchange() {
+		return ExchangeBuilder.topicExchange(USER_RATING_EXCHANGE).build();
+	}
+
+	@Bean
+	Binding userRatingBinding(Queue myUserRatingQueue, TopicExchange myUserRatingExchange) {
+		return BindingBuilder.bind(myUserRatingQueue).to(myUserRatingExchange).with(USER_RATING_QUEUE);
 	}
 }

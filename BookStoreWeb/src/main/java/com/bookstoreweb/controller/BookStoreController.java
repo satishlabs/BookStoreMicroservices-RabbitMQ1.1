@@ -140,7 +140,7 @@ public class BookStoreController {
 
 	@PostMapping("/addMyRating")
 	public String addMyRating(@ModelAttribute("") UserRating userRating) {
-		System.out.println("-------BookStoreController--addMyRating()---------");
+		System.out.println("-------1. BookStoreController--addMyRating()---------");
 		
 		bookStoreService.addUserRating(userRating); 
 		 
